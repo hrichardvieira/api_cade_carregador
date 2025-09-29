@@ -21,15 +21,6 @@ class ChargerViewSchema(BaseModel) :
     name : str = "Tauste"
     timestamp : str = "Tue, 23 Sep 2025 10:00:00 GMT"
 
-class ChargerUpdateSchema(BaseModel) :
-    """ Define a estrutura de como um carregador deve ser registrado.
-    """
-    id_charger : int = 1
-    id_type : int = 1
-    id_address : int = 1
-    id_status : int = 1
-    name : str = "Carregador do Extra"
-
 class ChargerFindSchema(BaseModel) :
     """ Definição da estrutura da busca.
         A busca será feita somente através do nome do carregador.

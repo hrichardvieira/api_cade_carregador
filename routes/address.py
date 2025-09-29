@@ -11,11 +11,9 @@ from schemas import AddressSchema
 from schemas.address import AddressViewSchema
 from schemas.address import AddressFindSchema
 from schemas.address import AddressFindByIdSchema
-from schemas.address import AddressDelSchema
-from schemas.address import AddressUpdateSchema
 from schemas.address import show_address
 
-address_tag = Tag(name="Address", description="Adição, Edição, Remoção e Visualização de Endereços.")
+address_tag = Tag(name="Address", description="Adição e Visualização de Endereços.")
 
 def register_address_route(app) :
     @app.post('/address', tags=[address_tag], responses={"200" : AddressViewSchema, "409" : ErrorSchema, "400" : ErrorSchema})
@@ -51,52 +49,9 @@ def register_address_route(app) :
             #logger.warning()
             return {"message" : error_message}, 400
 
-    @app.put('/address', tags=[address_tag], responses={"200" : AddressViewSchema, "409" : ErrorSchema, "400" : ErrorSchema})
-    def update_address(form: AddressUpdateSchema) :
-        """Atualiza o endereço a partir do id selecionado
-        
-        Permite atualizar id_type, id_address, id_status e name
-        """
-        id_address = form.id_address
-        #logger.debug()
-
-        session = Session()
-        address = session.query(Address).filter(Address.id_address == id_address).first()
-
-        if not address :
-            error_message = "O endereço selecionado não foi encontrado."
-            #logger.warning()
-            return {"message" : error_message}, 404
-        
-        if form.street is not None:
-            address.street = form.street
-        if form.id_neighborhood is not None:
-            address.id_neighborhood = form.id_neighborhood
-        if form.postal_code is not None:
-            address.postal_code = form.postal_code
-        if form.coordinates is not None:
-            address.coordinates = form.coordinates
-
-        try :
-            session.commit()
-            #logger.debug()
-            return show_address(address), 200
-        
-        except IntegrityError as integrityError :
-            session.rollback()
-            error_message = "O endereço informado já foi cadastrado."
-            #logger.warning()
-            return {"message" : error_message}, 400
-        
-        except Exception as exception :
-            session.rollback()
-            error_message = "Houve um erro ao atualizar o endereço."
-            #logger.warning()
-            return {"message" : error_message}, 400
-
     @app.get('/address', tags=[address_tag], responses={"200" : AddressViewSchema, "404" : ErrorSchema})
     def get_address(query: AddressFindSchema) :
-        """Faz a busca do endereço com base no id
+        """Faz a busca do endereço com base no CEP
         Retorna o endereço cadastrado
         """
 
@@ -134,22 +89,3 @@ def register_address_route(app) :
         else :
             #logger.debug()
             return show_address(address), 200
-
-    @app.delete('/address', tags=[address_tag], responses={"200" : AddressDelSchema, "404" : ErrorSchema})
-    def remove_address(query: AddressFindSchema) :
-        """
-
-        """
-        address_postal_code = unquote(unquote(query.postal_code))
-        # logger.debug()
-        session = Session()
-        count = session.query(Address).filter(Address.postal_code == address_postal_code).delete()
-        session.commit()
-
-        if count :
-            #logger.debug()
-            return {"message" : "endereço removido", "id_address" : address_postal_code}
-        else :
-            error_message = "O endereço não foi encontrado no banco de dados."
-            #logger.warning()
-            return {"message" : error_message}, 404
